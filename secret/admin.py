@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from secret.models import Secret, Log
+from secret.models import Log, Secret
 
 
 @admin.register(Secret)
