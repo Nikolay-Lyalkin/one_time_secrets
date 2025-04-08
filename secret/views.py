@@ -1,10 +1,10 @@
 from django.core.cache import cache
 from django.utils.encoding import force_bytes
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import generics
 from rest_framework.response import Response
 
-from secret.models import Secret, Log
+from secret.models import Log, Secret
 from secret.serializers import SecretSerializer
 from secret.services import generate_secret_key, get_client_ip
 
@@ -30,18 +30,25 @@ class SecretCreateAPIView(generics.CreateAPIView):
             cache.set(request.data["name"], gen_secret_key, 60 * 5)  # Кэширование на 5 минут созданного объекта
 
             ip = get_client_ip(request)  # Получение IP адреса пользователя
-            Log.objects.create(action="Создание секрета", name_secret=new_secret.name, secret=new_secret.secret, ttl_seconds=new_secret.ttl_seconds, secret_key=new_secret.secret_key, ip=ip)
+            Log.objects.create(
+                action="Создание секрета",
+                name_secret=new_secret.name,
+                secret=new_secret.secret,
+                ttl_seconds=new_secret.ttl_seconds,
+                secret_key=new_secret.secret_key,
+                ip=ip,
+            )
 
-            return Response({'message': message, 'secret_key': gen_secret_key}, headers=self._get_no_cache_headers())
+            return Response({"message": message, "secret_key": gen_secret_key}, headers=self._get_no_cache_headers())
 
         message = "Код доступа к секрету"
-        return Response({'message': message, 'secret_key': data})
+        return Response({"message": message, "secret_key": data})
 
     def _get_no_cache_headers(self):
         return {
-            'Cache-Control': 'no-store',
-            'Pragma': 'no-cache',
-            'Expires': '0',
+            "Cache-Control": "no-store",
+            "Pragma": "no-cache",
+            "Expires": "0",
         }
 
 
@@ -60,8 +67,14 @@ class SecretGetAPIView(generics.ListAPIView):
             secret = urlsafe_base64_decode(secret_obj.secret).decode("utf-8")
             secret_obj.save()
             message = "Ваш секрет"
-            Log.objects.create(action="Просмотр секрета", name_secret=secret_obj.name, secret=secret_obj.secret,
-                               ttl_seconds=secret_obj.ttl_seconds, secret_key=secret_obj.secret_key, ip=ip)
+            Log.objects.create(
+                action="Просмотр секрета",
+                name_secret=secret_obj.name,
+                secret=secret_obj.secret,
+                ttl_seconds=secret_obj.ttl_seconds,
+                secret_key=secret_obj.secret_key,
+                ip=ip,
+            )
             return Response({"message": message, "secret": secret})
         else:
             message = "По вашему ключу доступа ничего не найдено"
@@ -76,8 +89,14 @@ class SecretDeleteAPIView(generics.RetrieveAPIView):
         ip = get_client_ip(request)
         secret = Secret.objects.get(secret_key=secret_key)
         if secret:
-            Log.objects.create(action="Удаление секрета", name_secret=secret.name, secret=secret.secret,
-                               ttl_seconds=secret.ttl_seconds, secret_key=secret.secret_key, ip=ip)
+            Log.objects.create(
+                action="Удаление секрета",
+                name_secret=secret.name,
+                secret=secret.secret,
+                ttl_seconds=secret.ttl_seconds,
+                secret_key=secret.secret_key,
+                ip=ip,
+            )
             secret.delete()
             message = "Секрет успешно удалён"
             return Response({"message": message})

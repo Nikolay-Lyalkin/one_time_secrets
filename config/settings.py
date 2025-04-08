@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from celery.schedules import timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -26,14 +27,9 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "drf_yasg",
-    # "corsheaders",
     "rest_framework",
-    # "rest_framework_simplejwt",
-    # "django_filters",
-    # "pytest_django",
-    # "django_celery_beat",
-    # "users",
     "secret",
+    "django_celery_beat",
 ]
 
 MIDDLEWARE = [
@@ -44,7 +40,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -121,57 +116,23 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# REST_FRAMEWORK = {
-#     "DEFAULT_AUTHENTICATION_CLASSES": [
-#         "rest_framework_simplejwt.authentication.JWTAuthentication",
-#     ],
-#     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
-# }
-#
-# # Настройки срока действия токенов
-# SIMPLE_JWT = {
-#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=45),
-#     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-# }
-
 # URL-адрес брокера сообщений
-# CELERY_BROKER_URL = "redis://redis/0"  # Например, Redis, который по умолчанию работает на порту 6379
+CELERY_BROKER_URL = "redis://redis/0"  # Например, Redis, который по умолчанию работает на порту 6379
 
 # URL-адрес брокера результатов, также Redis
-# CELERY_RESULT_BACKEND = "redis://redis/0"
+CELERY_RESULT_BACKEND = "redis://redis/0"
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:8000",  # Замените на адрес вашего фронтенд-сервера
-# ]
-#
-# CSRF_TRUSTED_ORIGINS = [
-#     "https://read-and-write.example.com",  # Замените на адрес вашего фронтенд-сервера
-#     "http://localhost:8000",  # и добавьте адрес бэкенд-сервера
-# ]
+# Настройки для Celery-beat
+CELERY_BEAT_SCHEDULE = {
+    "task-name": {
+        "task": "secret.tasks.checking_secrets",  # Путь к задаче
+        "schedule": timedelta(hours=1),  # Расписание выполнения задачи (например, каждые 10 минут)
+    },
+}
 
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://redis/0",
     }
 }
-
-# CORS_ALLOW_ALL_ORIGINS = False
-
-# if "test" in sys.argv:
-#     DATABASES = {
-#         "default": {
-#             "ENGINE": "django.db.backends.sqlite3",
-#             "NAME": BASE_DIR / "test_db.sqlite3",
-#         }
-#     }
-
-# Данные для взаимодействия с почтой
-# EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-# EMAIL_HOST = os.getenv("EMAIL_HOST")
-# EMAIL_PORT = os.getenv("EMAIL_PORT")
-# EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-# EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-# EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS")
-# EMAIL_SENDER = os.getenv("EMAIL_SENDER")
-# EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL")
